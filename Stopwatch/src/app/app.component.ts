@@ -1,54 +1,53 @@
-import {Component} from '@angular/core';
-import {Stopwatch} from "./stopwatch.interface";
-import {StopwatchService} from "./stopwatch.service";
+import { Component, OnDestroy } from '@angular/core';
+import { BehaviorSubject, interval, map, Subscription } from "rxjs";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
-  firstClickChecked = false;
-  stopwatch: Stopwatch = {
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  };
-  isPaused: boolean = false;
 
+export class AppComponent implements OnDestroy {
+  firstClickChecked: boolean = false;
+  isRunning: boolean = false;
+  timer$: BehaviorSubject<number> = new BehaviorSubject(0);
+  timerSubscription: Subscription = new Subscription();
 
-  constructor(public _stopwatchService: StopwatchService) {
-    this._stopwatchService.stopWatch$.subscribe(
-      (el: Stopwatch) => (this.stopwatch = el)
-    )
+  ngOnDestroy() {
+    this.timerSubscription.unsubscribe();
   }
 
-  start() {
+  startTimer(): void {
+    const delay:number = this.timer$.value / 1000 + 1;
+    this.timerSubscription = interval(1000)
+      .pipe(map(initialTime => initialTime + delay))
+      .subscribe(value => this.timer$.next(value * 1000));
+    this.isRunning = true;
+  }
+
+  start():void {
     this.reset()
-    this._stopwatchService.startTimer()
-    this.isPaused = true;
+    this.startTimer()
   }
-
-  stop() {
-    this._stopwatchService.stopTimer()
-    this.isPaused = false;
+  stop():void {
+    this.timerSubscription.unsubscribe();
+    this.isRunning = false;
   }
-
-  wait() {
+  wait():void {
     if (this.firstClickChecked) {
-      if (this._stopwatchService.isRunning) {
-        this._stopwatchService.stopTimer();
+      if (this.timerSubscription.closed) {
+        this.startTimer();
       } else {
-        this._stopwatchService.startTimer();
+        this.timerSubscription.unsubscribe();
       }
     } else {
       this.firstClickChecked = true
       setTimeout(() => this.firstClickChecked = false, 300)
     }
   }
-
-  reset() {
-    this._stopwatchService.resetTimer()
-    this.isPaused = false
+  reset():void {
+    this.timerSubscription.unsubscribe();
+    this.timer$.next(0)
+    this.isRunning = false;
   }
 }
