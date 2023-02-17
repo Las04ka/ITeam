@@ -3,9 +3,9 @@
   <h1>{{timer$|async|date:'HH:mm:ss' :'UTC+0'}}</h1>
 </div>
 <div class="buttons">
-  <button mat-flat-button color="primary" (click)="start()" [hidden]="isRunning">Start</button>
-  <button mat-flat-button color="primary" (click)="stop()" [hidden]="!isRunning">Stop</button>
-  <button mat-flat-button color="primary" (click)="wait()">Wait</button>
-  <button mat-flat-button color="accent" (click)="reset()">Reset</button>
+  <button mat-flat-button color="primary" (click)="onStart()" [hidden]="isRunning">Start</button>
+  <button mat-flat-button color="primary" (click)="onStop()" [hidden]="!isRunning">Stop</button>
+  <button mat-flat-button color="primary" #waitBtn (click)="onWait()">Wait</button>
+  <button mat-flat-button color="accent" (click)="onReset()">Reset</button>
 </div>
 

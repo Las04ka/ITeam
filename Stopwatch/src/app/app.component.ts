@@ -1,5 +1,17 @@
-import { Component, OnDestroy } from '@angular/core';
-import { BehaviorSubject, interval, map, Subscription } from "rxjs";
+import { Component, OnDestroy, ViewChild } from '@angular/core';
+import { MatButton } from "@angular/material/button";
+import {
+  BehaviorSubject,
+  buffer,
+  debounceTime,
+  filter,
+  fromEvent,
+  interval,
+  map,
+  Subscription,
+  take
+} from "rxjs";
+
 
 @Component({
   selector: 'app-root',
@@ -8,7 +20,8 @@ import { BehaviorSubject, interval, map, Subscription } from "rxjs";
 })
 
 export class AppComponent implements OnDestroy {
-  firstClickChecked: boolean = false;
+  @ViewChild('waitBtn', { static: true }) btn!: MatButton;
+
   isRunning: boolean = false;
   timer$: BehaviorSubject<number> = new BehaviorSubject(0);
   timerSubscription: Subscription = new Subscription();
@@ -18,34 +31,38 @@ export class AppComponent implements OnDestroy {
   }
 
   startTimer(): void {
-    const delay:number = this.timer$.value / 1000 + 1;
+    const delay: number = this.timer$.value / 1000 + 1;
     this.timerSubscription = interval(1000)
       .pipe(map(initialTime => initialTime + delay))
       .subscribe(value => this.timer$.next(value * 1000));
     this.isRunning = true;
   }
 
-  start():void {
-    this.reset()
+  onStart(): void {
+    this.onReset()
     this.startTimer()
+    console.log(this.btn)
   }
-  stop():void {
+
+  onStop(): void {
     this.timerSubscription.unsubscribe();
     this.isRunning = false;
   }
-  wait():void {
-    if (this.firstClickChecked) {
-      if (this.timerSubscription.closed) {
-        this.startTimer();
-      } else {
-        this.timerSubscription.unsubscribe();
-      }
-    } else {
-      this.firstClickChecked = true
-      setTimeout(() => this.firstClickChecked = false, 300)
-    }
+
+  onWait(): void {
+    const click$ = fromEvent(this.btn._elementRef.nativeElement, 'click');
+    click$
+      .pipe(
+        take(2),
+        buffer(click$.pipe(debounceTime(300))),
+        filter((clicks) => clicks.length >= 2)
+      )
+      .subscribe((_) => {
+        (this.timerSubscription.closed) ? this.startTimer() : this.timerSubscription.unsubscribe()
+      });
   }
-  reset():void {
+
+  onReset(): void {
     this.timerSubscription.unsubscribe();
     this.timer$.next(0)
     this.isRunning = false;
