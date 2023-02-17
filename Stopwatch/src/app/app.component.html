@@ -1,1 +1,11 @@
-<h1>Empty</h1>
+<div class="timer">
+<!--  <h1>{{stopwatch.hours| number:'2.0'}}:{{stopwatch.minutes| number:'2.0'}}:{{stopwatch.seconds| number:'2.0'}}</h1>-->
+  <h1>{{timer$|async|date:'HH:mm:ss' :'UTC+0'}}</h1>
+</div>
+<div class="buttons">
+  <button mat-flat-button color="primary" (click)="onStart()" [hidden]="isRunning">Start</button>
+  <button mat-flat-button color="primary" (click)="onStop()" [hidden]="!isRunning">Stop</button>
+  <button mat-flat-button color="primary" #waitBtn (click)="onWait()">Wait</button>
+  <button mat-flat-button color="accent" (click)="onReset()">Reset</button>
+</div>
+
